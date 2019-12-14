@@ -81,7 +81,8 @@ async function rightData(page){
     const sidetype1 = await page.$x("//div[@class='SPZz6b']/div[@data-attrid='subtitle']/span");
     const sidetype2 = await page.$x("//span[@class='YhemCb']");
 
-    const side_description = await page.$x("//h2[@class='bNg8Rb']/following-sibling::span/text()")
+    const side_description1 = await page.$x("//h2[@class='bNg8Rb']/following-sibling::span/text()")
+    const side_description2 = await page.$x("//span[@class='ILfuVd UiGGAb']/span[@class='e24Kjd']/text()")
 
     const side_url = await page.$x("//span[@class='ellip']")
     
@@ -91,6 +92,14 @@ async function rightData(page){
     } 
     let type,desc;
     try{
+    desc = await page.evaluate(h1 => h1.textContent, side_description1[0]);}
+    catch(e){
+        try{
+            desc = await page.evaluate(h1 => h1.textContent, side_description2[0]);}
+        catch(e){
+        desc = 'none'}
+    }
+    try{
         type = await page.evaluate(h1 => h1.textContent, sidetype1[0]);}
     catch(e){
         try{
@@ -98,10 +107,6 @@ async function rightData(page){
         catch(e){
             type = 'none'}
     }
-    try{
-    desc = await page.evaluate(h1 => h1.textContent, side_description[0]);}
-    catch(e){
-        desc = 'none'}
     try{
         url = await page.evaluate(h1 => h1.textContent, side_url[0]);}
     catch(e)
@@ -160,7 +165,7 @@ async function run(keyword) {
                        }
                     }
                    if(JSON.stringify(right_side_data) === '{}'){
-                       right_side_data='No Data Available'}
+                       right_side_data={}}
                    data.push({'right_side_data':right_side_data});
                    await browser.close();
                    return JSON.stringify(data, null, 4);}
@@ -222,7 +227,7 @@ async function run_duplicate(keyword,yield_json,is_meanKeyword) {
                        }
                     }
                    if(JSON.stringify(right_side_data) === '{}'){
-                       right_side_data='No Data Available'}
+                       right_side_data={}}
                    data.push({'right_side_data':right_side_data});
                    did_u_mean_keyword = await page.$x("//span[contains(text(),'Did you mean:')]/parent::p[@class='gqLncc card-section']/a[@class='gL9Hy']/b/i/text()");
                    try{
@@ -252,16 +257,11 @@ const express = require('express');
 var bodyParser=require("body-parser");
 const port = 8080 ;
 const app = express();
-const ip = '0.0.0.0'
 
 app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 
-/**
- * Parses the text as JSON and exposes the resulting object on req.body.
- */
-
-app.all('/v1/api/search',  async function(req, res){
+/*app.all('/v1/api/search',  async function(req, res){
     var keyword = req.body.keyword || req.query.keyword;
     if (!keyword || keyword ===""){
         res.status(400).send("no input provided")}
@@ -269,9 +269,9 @@ app.all('/v1/api/search',  async function(req, res){
     console.log("Entered keyword is :",keyword);
     const response=await run(keyword);
     res.send(response);}
-});
+});*/
 
-app.all('/v2/api/search',  async function(req, res){
+app.all('/v1/api/search',  async function(req, res){
     var keyword = req.body.keyword || req.query.keyword;
     if (!keyword || keyword ===""){
         res.status(400).send("no input provided")}
@@ -282,7 +282,7 @@ app.all('/v2/api/search',  async function(req, res){
     res.send(response);}
 });
 
-app.listen(port,ip, (err) => {
+app.listen(port, (err) => {
   if (err) {
     return console.log('something bad happened', err)
   }
