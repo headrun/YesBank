@@ -62,7 +62,7 @@ async function rightData(page){
     var i =0;
     for (var j =0; j < label.length; j++)
             {
-               logo = await page.evaluate(el => el.textContent,label[j]);console.log(logo);
+               logo = await page.evaluate(el => el.textContent,label[j]);
                labels.push(logo)
                if (logo=='Hours' && label.length!=value1.length){
                    hours_xpath = await page.$x("//span[@class='TLou0b']/span");
@@ -77,33 +77,47 @@ async function rightData(page){
                }
                data.push(val)
             }
-    var sidetitle = await page.$x("//div[@class='SPZz6b']/div[@data-attrid='title']/span");
+    var sidetitle1 = await page.$x("//div[@class='SPZz6b']/div[@data-attrid='title']/span");
+    var sidetitle2 = await page.$x("//div[@class='DRolee']");
     var sidetype1 = await page.$x("//div[@class='SPZz6b']/div[@data-attrid='subtitle']/span");
     var sidetype2 = await page.$x("//span[@class='YhemCb']");
 
     var side_description1 = await page.$x("//h2[@class='bNg8Rb']/following-sibling::span/text()")
     var side_description2 = await page.$x("//span[@class='ILfuVd UiGGAb']/span[@class='e24Kjd']/text()")
+    var side_description3 = await page.$x("//span[@class='ILfuVd rjOVwe']")
 
     var side_url = await page.$x("//span[@class='ellip']")
-    
-    let title_txt = await page.evaluate(h1 => h1.textContent, sidetitle[0]);
+    try{ 
+    	title_txt = await page.evaluate(h1 => h1.textContent, sidetitle1[0]);
+    }
+    catch(e){
+	    title_txt = await page.evaluate(h1 => h1.textContent, sidetitle2[0]);
+    }
     if (title_txt=="See results about"){
         return 'none'
     } 
-    let type,desc;
+    let type='',desc='';
     try{
     desc = await page.evaluate(h1 => h1.textContent, side_description1[0]);}
     catch(e){
         try{
             desc = await page.evaluate(h1 => h1.textContent, side_description2[0]);}
-        catch(e){
-        desc = 'none'}
+	catch(e){
+		for(var i =0; i < side_description3.length; i++){
+			txt = await page.evaluate(h1 => h1.textContent,side_description3[i]);
+			desc = desc+txt
+		}
+	}
     }
     try{
         type = await page.evaluate(h1 => h1.textContent, sidetype1[0]);}
     catch(e){
         try{
-            type = await page.evaluate(h1 => h1.textContent, sidetype2[0]);}
+	    for(var i =0; i < sidetype2.length; i++){
+            	txt = await page.evaluate(h1 => h1.textContent, sidetype2[i]);
+		type=type+txt
+	    }
+	}
         catch(e){
             type = 'none'}
     }
@@ -166,7 +180,7 @@ async function run_duplicate(keyword,yield_json,is_meanKeyword) {
                data.push({'right_side_data':right_side_data});
                did_u_mean_keyword = await page.$x("//span[contains(text(),'Did you mean:')]/parent::p[@class='gqLncc card-section']/a[@class='gL9Hy']/b/i/text()");
                try{
-                    did_u_mean_keyword = await page.evaluate(el => el.textContent,did_u_mean_keyword[0]);console.log(did_u_mean_keyword);
+                    did_u_mean_keyword = await page.evaluate(el => el.textContent,did_u_mean_keyword[0]);
                     yield_json['original_search_data']=data
                     is_meanKeyword = '1'
                     res=await run_duplicate(did_u_mean_keyword,yield_json,is_meanKeyword)
@@ -190,7 +204,7 @@ async function run_duplicate(keyword,yield_json,is_meanKeyword) {
 
 
 const express = require('express');
-
+var datetime = require('node-datetime');
 var bodyParser=require("body-parser");
 const port = 8080 ;
 const app = express();
@@ -203,7 +217,8 @@ app.all('/v1/api/search',  async function(req, res){
     if (!keyword || keyword ===""){
         res.status(400).send("no input provided")}
     else{
-    console.log("Entered keyword is :",keyword);
+    var dt = datetime.create();
+    console.log("Entered keyword is :"+keyword+' '+dt.format('d/m/Y H:M:S'));
     yield_json = {}
     const response=await run_duplicate(keyword,yield_json,'0');
     res.send(response);}
@@ -211,6 +226,7 @@ app.all('/v1/api/search',  async function(req, res){
 
 app.listen(port, (err) => {
   if (err) {
+    console.log('something bad happened', err);
     return console.log('something bad happened', err)
   }
   console.log(`server is listening on ${port}`)
