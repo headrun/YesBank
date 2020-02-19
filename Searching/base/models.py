@@ -1,6 +1,6 @@
 from django.db import models
 
-MAX_LENGTH_ID               = 32
+MAX_LENGTH_ID               = 64
 MAX_LENGTH_NAME             = 32
 MAX_LENGTH_SHORT_NAME       = 16
 MAX_LENGTH_LONG_NAME        = 64
