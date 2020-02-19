@@ -1,5 +1,5 @@
 # Searching
-To crawl container shipping sites and provide live tracking services.
+To crawl google sites and provide information about the keyword seached.
 
 # Table of contents
 
