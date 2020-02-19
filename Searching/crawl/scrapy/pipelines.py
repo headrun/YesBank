@@ -34,6 +34,8 @@ class DjangoPipeline(object):
 
     def update_item(self, item, data):
         val = data['data']
+        if 'active' in data:
+            item.active = data['active']
         if isinstance(val, InvalidSchemaItem):
             item.active = False
             item.status = val.http_status
@@ -53,6 +55,8 @@ class DjangoPipeline(object):
         kwargs = {x: item_data.get(x, None) for x in ('name', 'order')}
         hashkey = item_data.get('hashkey', None)
         groups = item_data.get('groups', [])
+        if isinstance(item_data, EmptyDataSchema):
+            return
         if isinstance(item_data, BaseSchemaItem):
             item_data.validate()
             item_data = item_data.serialize()
