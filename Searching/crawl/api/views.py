@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404
 
 from oauth2_provider.contrib.rest_framework import IsAuthenticatedOrTokenHasScope
 
-from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
+from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND,HTTP_405_METHOD_NOT_ALLOWED
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.pagination import CursorPagination
