@@ -59,7 +59,7 @@ def rightSideInfo(self, response):
 def mainPageInfo(self, response):
     descriptionList = []
     listOfUrls          = response.xpath('//div[@class="r"]/a/@href').extract()
-    listOfTitles        = response.xpath('//h3[@class="LC20lb"]/text()').extract()
+    listOfTitles        = response.xpath('//h3[@class="LC20lb DKV0Md"]/text()').extract()
     listOfDescription   = response.xpath('//div[@class="s"]/div/span[@class="st"]')
     for i in range(len(listOfUrls)):
         desc = textify(listOfDescription[i].xpath('.//text()').extract())
