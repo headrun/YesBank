@@ -29,16 +29,12 @@ class Item(BaseItem):
 
 class ItemData(BaseData):
     item        = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='data_list')
-    hashkey     = None
 
     class Meta(BaseData.Meta):
-        pass
-        '''
-        unique_together = (('item', 'name', 'order', 'hashkey'), )
+        unique_together = (('item', 'name', 'order'), )
         indexes = [
-            models.Index(fields=('item', 'name', 'order', 'hashkey')),
+            models.Index(fields=('item', 'name', 'order')),
         ]
-        '''
 
 class ItemLog(BaseLog):
     crawl_run   = models.ForeignKey(CrawlRun, null=True, blank=True, on_delete=models.CASCADE, related_name='item_logs')
