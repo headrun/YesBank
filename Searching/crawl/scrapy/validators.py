@@ -47,3 +47,6 @@ class OKSchemaItem(HttpStatusSchemaItem):
 
 class InvalidSchemaItem(HttpStatusSchemaItem):
     http_status_default = '204'
+
+class EmptyDataSchema(HttpStatusSchemaItem):
+    http_status_default = '204'
