@@ -57,6 +57,8 @@ async function pageData(page) {
 async function rightData(page){
     var labels = new Array();
     var data = new Array();
+    var Subs_titles_arr = new Array();
+    var is_more_available;
     var label = await page.$x("//span[@class='w8qArf']/a");
     var value1 = await page.$x("//span[@class='w8qArf']//following-sibling::span");
     var i =0;
@@ -64,6 +66,8 @@ async function rightData(page){
             {
                logo = await page.evaluate(el => el.textContent,label[j]);console.log(logo);
                labels.push(logo)
+               if (logo=='Subsidiaries')
+                is_more_available = true
                if (logo=='Hours' && label.length!=value1.length){
                    hours_xpath = await page.$x("//span[@class='TLou0b']/span");
                    val = await page.evaluate(el => el.textContent,hours_xpath[0]);
@@ -85,6 +89,29 @@ async function rightData(page){
     var side_description2 = await page.$x("//span[@class='ILfuVd UiGGAb']/span[@class='e24Kjd']/text()")
 
     var side_url = await page.$x("//span[@class='ellip']")
+    
+    if (is_more_available){
+      var puppeteer = require('puppeteer');
+      var more_link = "//span[contains(text(),'MORE')]/.."
+      var more_link_Arr = await page.$x(more_link);
+      var href_link = await page.evaluate((...more_link)=> {return more_link.map(e => e.href);},...more_link_Arr)
+
+      const browser = await puppeteer.launch({headless: true,args: ['--no-sandbox', '--disable-setuid-sandbox','--lang=en-GB']});
+      const sub_Page = await browser.newPage();
+      await sub_Page.goto(href_link[0],{waitUntil: 'networkidle2'});
+      var Subsidiaries_title_path = "//div[@class='EDblX DAVP1']/a[@aria-label]"; 
+      var Subs_titles = await sub_Page.$x(Subsidiaries_title_path);
+ 
+      if(Subs_titles.length == 0) {
+        Subsidiaries_title_path = "//div[@class = 'title']"
+        Subs_titles = await sub_Page.$x(Subsidiaries_title_path);
+
+      }
+        for (var j =0; j < Subs_titles.length; j++){
+            Subs_titles_arr.push(await sub_Page.evaluate(el => el.textContent,Subs_titles[j]));
+        };
+
+    }
     
     let title_txt = await page.evaluate(h1 => h1.textContent, sidetitle[0]);
     if (title_txt=="See results about"){
@@ -112,7 +139,7 @@ async function rightData(page){
     catch(e)
     {
         url='none'}
-    return [title_txt,type,desc,url,labels,data]
+    return [title_txt,type,desc,url,labels,data, Subs_titles_arr]
 }
 
 
@@ -146,9 +173,13 @@ async function run_duplicate(keyword,yield_json,is_meanKeyword) {
                    right_side_data["description"]=aux_data[2]
                    right_side_data["website_homepage"]=aux_data[3]
                    try{const labels = aux_data[4]
+                        console.log('Labels:',labels)
                         const values = aux_data[5]
                         for(var i =0;i<labels.length;i++){
-                            right_side_data[labels[i]]=values[i]
+                          if(labels[i] == 'Subsidiaries') 
+                              right_side_data[labels[i]] = aux_data[6]
+                            else
+                              right_side_data[labels[i]]=values[i]
                         };
                    }
                    catch(e){
