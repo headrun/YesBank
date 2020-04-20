@@ -40,7 +40,7 @@ async function pageData(page) {
             title_list.push(await page.evaluate(el => el.textContent,title_array[j]));
     }
     if (title_array.length==0){
-        title_xpath = '//h3[@class="LC20lb"]/text()'
+        title_xpath = '//h3[@class="LC20lb DKV0Md"]/text()'
         title_array = await page.$x(title_xpath);
         for (var j =0; j < title_array.length; j++){
             title_list.push(await page.evaluate(el => el.textContent,title_array[j]));
@@ -91,13 +91,18 @@ async function rightData(page){
     var side_url = await page.$x("//span[@class='ellip']")
     
     if (is_more_available){
-      var puppeteer = require('puppeteer');
+      var puppeteer = require('puppeteer-extra');
+      const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+      puppeteer.use(StealthPlugin());
       var more_link = "//span[contains(text(),'MORE')]/.."
       var more_link_Arr = await page.$x(more_link);
       var href_link = await page.evaluate((...more_link)=> {return more_link.map(e => e.href);},...more_link_Arr)
-
-      const browser = await puppeteer.launch({headless: true,args: ['--no-sandbox', '--disable-setuid-sandbox','--lang=en-GB']});
+      const browser = await puppeteer.launch({ignoreHTTPSErrors: true, headless: true,args: ['--no-sandbox', '--disable-setuid-sandbox','--lang=en-GB','--proxy-server=http://zproxy.lum-superproxy.io:22225']});
       const sub_Page = await browser.newPage();
+      await sub_Page.authenticate({
+                        username: 'lum-customer-headrunmain-zone-static-country-in',
+                        password: 'v4iey84gn7b7'
+               });
       await sub_Page.goto(href_link[0],{waitUntil: 'networkidle2'});
       var Subsidiaries_title_path = "//div[@class='EDblX DAVP1']/a[@aria-label]"; 
       var Subs_titles = await sub_Page.$x(Subsidiaries_title_path);
@@ -116,24 +121,32 @@ async function rightData(page){
     let title_txt = await page.evaluate(h1 => h1.textContent, sidetitle[0]);
     if (title_txt=="See results about"){
         return 'none'
-    } 
-    let type,desc;
+    }
+    let type='',desc='';
     try{
     desc = await page.evaluate(h1 => h1.textContent, side_description1[0]);}
     catch(e){
         try{
             desc = await page.evaluate(h1 => h1.textContent, side_description2[0]);}
-        catch(e){
-        desc = 'none'}
+    catch(e){
+        for(var i =0; i < side_description3.length; i++){
+            txt = await page.evaluate(h1 => h1.textContent,side_description3[i]);
+            desc = desc+txt
+        }
+    }
     }
     try{
         type = await page.evaluate(h1 => h1.textContent, sidetype1[0]);}
     catch(e){
         try{
-            type = await page.evaluate(h1 => h1.textContent, sidetype2[0]);}
+        for(var i =0; i < sidetype2.length; i++){
+                txt = await page.evaluate(h1 => h1.textContent, sidetype2[i]);
+        type=type+txt
+        }
+    }
         catch(e){
             type = 'none'}
-    }
+    } 
     try{
         url = await page.evaluate(h1 => h1.textContent, side_url[0]);}
     catch(e)
@@ -144,11 +157,16 @@ async function rightData(page){
 
 
 async function run_duplicate(keyword,yield_json,is_meanKeyword) {
-        var puppeteer = require('puppeteer');
-        //const browser = await puppeteer.launch({headless: true,args: ['--no-sandbox', '--disable-setuid-sandbox','--lang=en-GB','--proxy-server=socks5://127.0.0.1:9050']});
-        const browser = await puppeteer.launch({headless: true,args: ['--no-sandbox', '--disable-setuid-sandbox','--lang=en-GB']});
+        var puppeteer = require('puppeteer-extra');
+        const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+        puppeteer.use(StealthPlugin());
+        const browser = await puppeteer.launch({ignoreHTTPSErrors: true, headless: true,args: ['--no-sandbox', '--disable-setuid-sandbox','--lang=en-GB','--proxy-server=http://zproxy.lum-superproxy.io:22225']});
         try{
                const page = await browser.newPage();
+               await page.authenticate({
+                        username: 'lum-customer-headrunmain-zone-static-country-in',
+                        password: 'v4iey84gn7b7'
+               });
                await page.goto("https://www.google.co.in/search?q="+keyword,{waitUntil: 'networkidle2'});
                let data = await pageData(page);
                try{
@@ -173,7 +191,6 @@ async function run_duplicate(keyword,yield_json,is_meanKeyword) {
                    right_side_data["description"]=aux_data[2]
                    right_side_data["website_homepage"]=aux_data[3]
                    try{const labels = aux_data[4]
-                        console.log('Labels:',labels)
                         const values = aux_data[5]
                         for(var i =0;i<labels.length;i++){
                           if(labels[i] == 'Subsidiaries') 
@@ -214,9 +231,8 @@ async function run_duplicate(keyword,yield_json,is_meanKeyword) {
             } 
 }
 
-
 const express = require('express');
-
+var datetime = require('node-datetime');
 var bodyParser=require("body-parser");
 const port = 8080 ;
 const app = express();
@@ -229,7 +245,8 @@ app.all('/v1/api/search',  async function(req, res){
     if (!keyword || keyword ===""){
         res.status(400).send("no input provided")}
     else{
-    console.log("Entered keyword is :",keyword);
+    var dt = datetime.create();
+    console.log("Entered keyword is :"+keyword+' '+dt.format('d/m/Y H:M:S'));
     yield_json = {}
     const response=await run_duplicate(keyword,yield_json,'0');
     res.send(response);}
@@ -237,10 +254,10 @@ app.all('/v1/api/search',  async function(req, res){
 
 app.listen(port, (err) => {
   if (err) {
+    console.log('something bad happened', err);
     return console.log('something bad happened', err)
   }
   console.log(`server is listening on ${port}`)
 })
-
 
 
