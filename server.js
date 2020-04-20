@@ -110,7 +110,7 @@ async function rightData(page){
         for (var j =0; j < Subs_titles.length; j++){
             Subs_titles_arr.push(await sub_Page.evaluate(el => el.textContent,Subs_titles[j]));
         };
-
+    await browser.close();
     }
     
     let title_txt = await page.evaluate(h1 => h1.textContent, sidetitle[0]);
