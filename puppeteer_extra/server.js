@@ -57,13 +57,17 @@ async function pageData(page) {
 async function rightData(page){
     var labels = new Array();
     var data = new Array();
+    var Subs_titles_arr = new Array();
+    var is_more_available;
     var label = await page.$x("//span[@class='w8qArf']/a");
     var value1 = await page.$x("//span[@class='w8qArf']//following-sibling::span");
     var i =0;
     for (var j =0; j < label.length; j++)
             {
-               logo = await page.evaluate(el => el.textContent,label[j]);
+               logo = await page.evaluate(el => el.textContent,label[j]);console.log(logo);
                labels.push(logo)
+               if (logo=='Subsidiaries')
+                is_more_available = true
                if (logo=='Hours' && label.length!=value1.length){
                    hours_xpath = await page.$x("//span[@class='TLou0b']/span");
                    val = await page.evaluate(el => el.textContent,hours_xpath[0]);
@@ -77,47 +81,56 @@ async function rightData(page){
                }
                data.push(val)
             }
-    var sidetitle1 = await page.$x("//div[@class='SPZz6b']/div[@data-attrid='title']/span");
-    var sidetitle2 = await page.$x("//div[@class='DRolee']");
+    var sidetitle = await page.$x("//div[@class='SPZz6b']/div[@data-attrid='title']/span");
     var sidetype1 = await page.$x("//div[@class='SPZz6b']/div[@data-attrid='subtitle']/span");
     var sidetype2 = await page.$x("//span[@class='YhemCb']");
 
     var side_description1 = await page.$x("//h2[@class='bNg8Rb']/following-sibling::span/text()")
     var side_description2 = await page.$x("//span[@class='ILfuVd UiGGAb']/span[@class='e24Kjd']/text()")
-    var side_description3 = await page.$x("//span[@class='ILfuVd rjOVwe']")
 
     var side_url = await page.$x("//span[@class='ellip']")
-    try{ 
-    	title_txt = await page.evaluate(h1 => h1.textContent, sidetitle1[0]);
+    
+    if (is_more_available){
+      var puppeteer = require('puppeteer');
+      var more_link = "//span[contains(text(),'MORE')]/.."
+      var more_link_Arr = await page.$x(more_link);
+      var href_link = await page.evaluate((...more_link)=> {return more_link.map(e => e.href);},...more_link_Arr)
+
+      const browser = await puppeteer.launch({headless: true,args: ['--no-sandbox', '--disable-setuid-sandbox','--lang=en-GB']});
+      const sub_Page = await browser.newPage();
+      await sub_Page.goto(href_link[0],{waitUntil: 'networkidle2'});
+      var Subsidiaries_title_path = "//div[@class='EDblX DAVP1']/a[@aria-label]"; 
+      var Subs_titles = await sub_Page.$x(Subsidiaries_title_path);
+ 
+      if(Subs_titles.length == 0) {
+        Subsidiaries_title_path = "//div[@class = 'title']"
+        Subs_titles = await sub_Page.$x(Subsidiaries_title_path);
+
+      }
+        for (var j =0; j < Subs_titles.length; j++){
+            Subs_titles_arr.push(await sub_Page.evaluate(el => el.textContent,Subs_titles[j]));
+        };
+
     }
-    catch(e){
-	    title_txt = await page.evaluate(h1 => h1.textContent, sidetitle2[0]);
-    }
+    
+    let title_txt = await page.evaluate(h1 => h1.textContent, sidetitle[0]);
     if (title_txt=="See results about"){
         return 'none'
     } 
-    let type='',desc='';
+    let type,desc;
     try{
     desc = await page.evaluate(h1 => h1.textContent, side_description1[0]);}
     catch(e){
         try{
             desc = await page.evaluate(h1 => h1.textContent, side_description2[0]);}
-	catch(e){
-		for(var i =0; i < side_description3.length; i++){
-			txt = await page.evaluate(h1 => h1.textContent,side_description3[i]);
-			desc = desc+txt
-		}
-	}
+        catch(e){
+        desc = 'none'}
     }
     try{
         type = await page.evaluate(h1 => h1.textContent, sidetype1[0]);}
     catch(e){
         try{
-	    for(var i =0; i < sidetype2.length; i++){
-            	txt = await page.evaluate(h1 => h1.textContent, sidetype2[i]);
-		type=type+txt
-	    }
-	}
+            type = await page.evaluate(h1 => h1.textContent, sidetype2[0]);}
         catch(e){
             type = 'none'}
     }
@@ -126,28 +139,23 @@ async function rightData(page){
     catch(e)
     {
         url='none'}
-    return [title_txt,type,desc,url,labels,data];
+    return [title_txt,type,desc,url,labels,data, Subs_titles_arr]
 }
 
 
 async function run_duplicate(keyword,yield_json,is_meanKeyword) {
-        var puppeteer = require('puppeteer-extra');
-        const StealthPlugin = require('puppeteer-extra-plugin-stealth');
-        puppeteer.use(StealthPlugin());
-	const browser = await puppeteer.launch({ignoreHTTPSErrors: true, headless: true,args: ['--no-sandbox', '--disable-setuid-sandbox','--lang=en-GB','--proxy-server=http://zproxy.lum-superproxy.io:22225']});
-	try{
+        var puppeteer = require('puppeteer');
+        //const browser = await puppeteer.launch({headless: true,args: ['--no-sandbox', '--disable-setuid-sandbox','--lang=en-GB','--proxy-server=socks5://127.0.0.1:9050']});
+        const browser = await puppeteer.launch({headless: true,args: ['--no-sandbox', '--disable-setuid-sandbox','--lang=en-GB']});
+        try{
                const page = await browser.newPage();
-               await page.authenticate({
-                        username: 'lum-customer-hl_8cd3e511-zone-static-country-in',
-                        password: 'v4iey84gn7b7'
-               });
                await page.goto("https://www.google.co.in/search?q="+keyword,{waitUntil: 'networkidle2'});
                let data = await pageData(page);
                try{
-                    var aux_data = await rightData(page);
+                    aux_data = await rightData(page);
                }
                catch(e){
-                   var aux_data = 'none';
+                   aux_data = 'none'
                }
                link_urls = data[0]
                title_text = data[1]
@@ -165,9 +173,13 @@ async function run_duplicate(keyword,yield_json,is_meanKeyword) {
                    right_side_data["description"]=aux_data[2]
                    right_side_data["website_homepage"]=aux_data[3]
                    try{const labels = aux_data[4]
+                        console.log('Labels:',labels)
                         const values = aux_data[5]
                         for(var i =0;i<labels.length;i++){
-                            right_side_data[labels[i]]=values[i]
+                          if(labels[i] == 'Subsidiaries') 
+                              right_side_data[labels[i]] = aux_data[6]
+                            else
+                              right_side_data[labels[i]]=values[i]
                         };
                    }
                    catch(e){
@@ -180,7 +192,7 @@ async function run_duplicate(keyword,yield_json,is_meanKeyword) {
                data.push({'right_side_data':right_side_data});
                did_u_mean_keyword = await page.$x("//span[contains(text(),'Did you mean:')]/parent::p[@class='gqLncc card-section']/a[@class='gL9Hy']/b/i/text()");
                try{
-                    did_u_mean_keyword = await page.evaluate(el => el.textContent,did_u_mean_keyword[0]);
+                    did_u_mean_keyword = await page.evaluate(el => el.textContent,did_u_mean_keyword[0]);console.log(did_u_mean_keyword);
                     yield_json['original_search_data']=data
                     is_meanKeyword = '1'
                     res=await run_duplicate(did_u_mean_keyword,yield_json,is_meanKeyword)
@@ -204,7 +216,7 @@ async function run_duplicate(keyword,yield_json,is_meanKeyword) {
 
 
 const express = require('express');
-var datetime = require('node-datetime');
+
 var bodyParser=require("body-parser");
 const port = 8080 ;
 const app = express();
@@ -217,8 +229,7 @@ app.all('/v1/api/search',  async function(req, res){
     if (!keyword || keyword ===""){
         res.status(400).send("no input provided")}
     else{
-    var dt = datetime.create();
-    console.log("Entered keyword is :"+keyword+' '+dt.format('d/m/Y H:M:S'));
+    console.log("Entered keyword is :",keyword);
     yield_json = {}
     const response=await run_duplicate(keyword,yield_json,'0');
     res.send(response);}
@@ -226,7 +237,6 @@ app.all('/v1/api/search',  async function(req, res){
 
 app.listen(port, (err) => {
   if (err) {
-    console.log('something bad happened', err);
     return console.log('something bad happened', err)
   }
   console.log(`server is listening on ${port}`)
