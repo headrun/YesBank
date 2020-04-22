@@ -220,7 +220,7 @@ async function run_duplicate(keyword,yield_json,is_meanKeyword) {
                               right_side_data[labels[i]]=values[i]
                         };
                         if(aux_data[7]!='none'){
-                            right_side_data['logo_url']="https://gson.head.run/image/"+keyword}
+                            right_side_data['logo_url']="localhost:8080/image/"+keyword}
                         else{
                             right_side_data['logo_url']=''}
                    }
@@ -261,10 +261,11 @@ var datetime = require('node-datetime');
 var bodyParser=require("body-parser");
 const port = 8080 ;
 const app = express();
-
+var path = require('path');
 app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
-app.use("/image", express.static("./images"));
+//app.use("/image", express.static("./images"));
+app.use(express.static(path.join(__dirname, 'images')));
 app.all('/v1/api/search',  async function(req, res){
     var keyword = req.body.keyword || req.query.keyword;
     if (!keyword || keyword ===""){
@@ -275,6 +276,15 @@ app.all('/v1/api/search',  async function(req, res){
     yield_json = {}
     const response=await run_duplicate(keyword,yield_json,'0');
     res.send(response);}
+});
+
+app.get('/image/:name', function(req,res){
+	app.set('views', __dirname);
+	app.engine('html', require('ejs').renderFile);
+	app.set('view engine', 'ejs');
+	console.log(req.url.split('/')[2])
+	var img_name = req.url.split('/')[2]
+	res.render('image.html', {name:img_name}); 
 });
 
 app.listen(port, (err) => {
