@@ -54,7 +54,8 @@ async function pageData(page) {
     return [link_urls,title_list,description_list]
 }
 
-async function rightData(page){
+async function rightData(page, keyword){
+    const fs = require('fs');
     var labels = new Array();
     var data = new Array();
     var Subs_titles_arr = new Array();
@@ -81,12 +82,14 @@ async function rightData(page){
                }
                data.push(val)
             }
-    var sidetitle = await page.$x("//div[@class='SPZz6b']/div[@data-attrid='title']/span");
+    var sidetitle1 = await page.$x("//div[@class='SPZz6b']/div[@data-attrid='title']/span");
+    var sidetitle2 = await page.$x("//div[@class='DRolee']");
     var sidetype1 = await page.$x("//div[@class='SPZz6b']/div[@data-attrid='subtitle']/span");
     var sidetype2 = await page.$x("//span[@class='YhemCb']");
 
     var side_description1 = await page.$x("//h2[@class='bNg8Rb']/following-sibling::span/text()")
     var side_description2 = await page.$x("//span[@class='ILfuVd UiGGAb']/span[@class='e24Kjd']/text()")
+    var side_description3 = await page.$x("//span[@class='ILfuVd rjOVwe']")
 
     var side_url = await page.$x("//span[@class='ellip']")
     
@@ -117,11 +120,16 @@ async function rightData(page){
         };
     await browser.close();
     }
-    
-    let title_txt = await page.evaluate(h1 => h1.textContent, sidetitle[0]);
+    try{
+        title_txt = await page.evaluate(h1 => h1.textContent, sidetitle1[0]);
+    }
+    catch(e){
+        title_txt = await page.evaluate(h1 => h1.textContent, sidetitle2[0]);
+    }
     if (title_txt=="See results about"){
         return 'none'
     }
+ 
     let type='',desc='';
     try{
     desc = await page.evaluate(h1 => h1.textContent, side_description1[0]);}
@@ -152,7 +160,21 @@ async function rightData(page){
     catch(e)
     {
         url='none'}
-    return [title_txt,type,desc,url,labels,data, Subs_titles_arr]
+
+    var logo_xpath = await page.$x("//g-img[@class='BA0A6c']/img[@class='rISBZc M4dUYb']");
+    try{
+        logo_url = await page.evaluate((...logo_xpath) => {return logo_xpath.map(e => e.src);}, ...logo_xpath);
+        var viewSource = await page.goto(logo_url[0],{waitUntil: 'networkidle2'});
+        fs.writeFile("./images/"+keyword, await viewSource.buffer(), function(err) {
+            if(err) {
+                    return console.log(err);
+            }
+        console.log("The file was saved!");
+        logo='yes';
+        });}
+    catch(e){
+        logo='none'}
+    return [title_txt,type,desc,url,labels,data, Subs_titles_arr, logo]
 }
 
 
@@ -170,7 +192,7 @@ async function run_duplicate(keyword,yield_json,is_meanKeyword) {
                await page.goto("https://www.google.co.in/search?q="+keyword,{waitUntil: 'networkidle2'});
                let data = await pageData(page);
                try{
-                    aux_data = await rightData(page);
+                    aux_data = await rightData(page, keyword);;
                }
                catch(e){
                    aux_data = 'none'
@@ -178,7 +200,6 @@ async function run_duplicate(keyword,yield_json,is_meanKeyword) {
                link_urls = data[0]
                title_text = data[1]
                short_desc = data[2]
-               var fs = require('fs');
                data= new Array();
                for(var i = 0; i<link_urls.length;i++)
                {
@@ -198,6 +219,10 @@ async function run_duplicate(keyword,yield_json,is_meanKeyword) {
                             else
                               right_side_data[labels[i]]=values[i]
                         };
+                        if(aux_data[7]!='none'){
+                            right_side_data['logo_url']="https://gson.head.run/image/"+keyword}
+                        else{
+                            right_side_data['logo_url']=''}
                    }
                    catch(e){
                        console.log("pattern different")
@@ -239,7 +264,7 @@ const app = express();
 
 app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
-
+app.use("/image", express.static("./images"));
 app.all('/v1/api/search',  async function(req, res){
     var keyword = req.body.keyword || req.query.keyword;
     if (!keyword || keyword ===""){
