@@ -220,7 +220,7 @@ async function run_duplicate(keyword,yield_json,is_meanKeyword) {
                               right_side_data[labels[i]]=values[i]
                         };
                         if(aux_data[7]!='none'){
-                            right_side_data['logo_url']="localhost:8080/image/"+keyword}
+                            right_side_data['logo_url']="http://gson.head.run/image/"+keyword}
                         else{
                             right_side_data['logo_url']=''}
                    }
