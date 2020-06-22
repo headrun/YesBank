@@ -223,7 +223,9 @@ async function run_duplicate(keyword,yield_json,is_meanKeyword) {
                             right_side_data['logo_url']="http://gson.head.run/image/"+keyword}
                         else{
                             right_side_data['logo_url']=''}
+
                    }
+
                    catch(e){
                        console.log("pattern different")
                    }
@@ -257,6 +259,7 @@ async function run_duplicate(keyword,yield_json,is_meanKeyword) {
 }
 
 const express = require('express');
+const mysql = require('mysql');
 var datetime = require('node-datetime');
 var bodyParser=require("body-parser");
 const port = 8080 ;
@@ -266,7 +269,27 @@ app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 //app.use("/image", express.static("./images"));
 app.use(express.static(path.join(__dirname, 'images')));
+
+var connection = mysql.createConnection ({
+    host: 'localhost',
+    user: 'root',
+    password: '',
+    database: 'yesbank'
+});
+
+connection.connect((err) => {
+    if (err) {
+        throw err;
+    }
+    console.log('Connected to database');
+});
+
+
+
+
 app.all('/v1/api/search',  async function(req, res){
+  let right_side_data_json = {};
+  let right_side_data = {};
     var keyword = req.body.keyword || req.query.keyword;
     if (!keyword || keyword ===""){
         res.status(400).send("no input provided")}
@@ -275,7 +298,39 @@ app.all('/v1/api/search',  async function(req, res){
     console.log("Entered keyword is :"+keyword+' '+dt.format('d/m/Y H:M:S'));
     yield_json = {}
     const response=await run_duplicate(keyword,yield_json,'0');
-    res.send(response);}
+    res.send(response);
+    let fin_result_json = JSON.parse(response)['original_search_data']
+    if (fin_result_json[fin_result_json.length - 1]['right_side_data'])
+      right_side_data_json =  fin_result_json[fin_result_json.length - 1]['right_side_data']        
+      right_side_data = new Object({
+        title : right_side_data_json['title']? right_side_data_json['title'] : '',
+        type : right_side_data_json['type']? right_side_data_json['type'] : '', 
+        description: right_side_data_json['description']? right_side_data_json['description'] : '',
+        homepage: right_side_data_json['website_homepage']? right_side_data_json['website_homepage'] : '',
+        subsidiaries: right_side_data_json['Subsidiaries']? right_side_data_json['Subsidiaries'].toString() : '', 
+        status_code: res.statusCode ? res.statusCode : '', 
+        headquarters : right_side_data_json['Headquarters']? right_side_data_json['Headquarters'] : '',
+        founded : right_side_data_json['Founded']? right_side_data_json['Founded'] : '', 
+        founder: right_side_data_json['Founder']? right_side_data_json['Founder'] : '', 
+        logo_url: right_side_data_json['logo_url']? right_side_data_json['logo_url'] : '', 
+        customer_service: right_side_data_json['Customer service']? right_side_data_json['Customer service'] : '', 
+        parent_organization: right_side_data_json['Parent organization']? right_side_data_json['Parent organization'] : '',
+        number_of_employees: right_side_data_json['Number of employees']? right_side_data_json['Number of employees'] : '',
+        ceo:right_side_data_json['CEO']? right_side_data_json['CEO'] : '',
+        phone:right_side_data_json['Phone']?right_side_data_json['Phone']: '',
+        customer_care:right_side_data_json['Customer service']?right_side_data_json['Customer service']: '',
+        status_msg: res.statusMessage ? res.statusMessage : ''
+      })
+      
+    var sql = `INSERT INTO right_side_data (title, type, description, homepage, subsidiaries, status_code, headquarters, founded, founder, logo_url, customer_service, parent_organization, number_of_employees, ceo, phone, customer_care, address, status_msg) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
+    connection.query(sql, [right_side_data["title"], right_side_data["type"], right_side_data["description"], right_side_data['website_homepage'], right_side_data['subsidiaries'], right_side_data['status_code'], right_side_data['headquarters'], right_side_data['founded'], right_side_data['founder'], right_side_data['logo_url'], right_side_data['customer_service'], right_side_data['parent_organization'], right_side_data_json['Number of employees'], right_side_data_json['CEO'], right_side_data_json['Phone'], right_side_data_json['Customer service'], right_side_data_json['Address'], right_side_data['status_msg']], function (err, data) {
+        if (err) {
+            throw err;
+        } else {
+            console.log('successfully inserted into db')
+        }
+  });
+  }
 });
 
 app.get('/image/:name', function(req,res){
