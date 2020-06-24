@@ -319,11 +319,12 @@ app.all('/v1/api/search',  async function(req, res){
         ceo:right_side_data_json['CEO']? right_side_data_json['CEO'] : '',
         phone:right_side_data_json['Phone']?right_side_data_json['Phone']: '',
         customer_care:right_side_data_json['Customer service']?right_side_data_json['Customer service']: '',
-        status_msg: res.statusMessage ? res.statusMessage : ''
+        status_msg: res.statusMessage ? res.statusMessage : '',
+        keyword: keyword ? keyword : ''
       })
       
-    var sql = `INSERT INTO right_side_data (title, type, description, homepage, subsidiaries, status_code, headquarters, founded, founder, logo_url, customer_service, parent_organization, number_of_employees, ceo, phone, customer_care, address, status_msg) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
-    connection.query(sql, [right_side_data["title"], right_side_data["type"], right_side_data["description"], right_side_data['website_homepage'], right_side_data['subsidiaries'], right_side_data['status_code'], right_side_data['headquarters'], right_side_data['founded'], right_side_data['founder'], right_side_data['logo_url'], right_side_data['customer_service'], right_side_data['parent_organization'], right_side_data_json['Number of employees'], right_side_data_json['CEO'], right_side_data_json['Phone'], right_side_data_json['Customer service'], right_side_data_json['Address'], right_side_data['status_msg']], function (err, data) {
+    var sql = `INSERT IGNORE INTO right_side_data (title, type, description, homepage, subsidiaries, status_code, headquarters, founded, founder, logo_url, customer_service, parent_organization, number_of_employees, ceo, phone, customer_care, address, status_msg, keyword) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
+    connection.query(sql, [right_side_data["title"], right_side_data["type"], right_side_data["description"], right_side_data['website_homepage'], right_side_data['subsidiaries'], right_side_data['status_code'], right_side_data['headquarters'], right_side_data['founded'], right_side_data['founder'], right_side_data['logo_url'], right_side_data['customer_service'], right_side_data['parent_organization'], right_side_data_json['Number of employees'], right_side_data_json['CEO'], right_side_data_json['Phone'], right_side_data_json['Customer service'], right_side_data_json['Address'], right_side_data['status_msg'], right_side_data['keyword']], function (err, data) {
         if (err) {
             throw err;
         } else {
