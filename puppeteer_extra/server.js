@@ -161,7 +161,7 @@ async function rightData(page, keyword){
     {
         url='none'}
 
-    var logo_xpath = await page.$x("//g-img[@class='BA0A6c']/img[@class='rISBZc M4dUYb']");
+    var logo_xpath = await page.$x("//g-img[@class='ivg-i PZPZlf']/img[@class='rISBZc M4dUYb']");
     try{
         logo_url = await page.evaluate((...logo_xpath) => {return logo_xpath.map(e => e.src);}, ...logo_xpath);
         var viewSource = await page.goto(logo_url[0],{waitUntil: 'networkidle2'});
@@ -272,8 +272,8 @@ app.use(express.static(path.join(__dirname, 'images')));
 
 var connection = mysql.createConnection ({
     host: 'localhost',
-    user: 'root',
-    password: '',
+    user: 'yesbank',
+    password: 'y@sbankh@adrun',
     database: 'yesbank'
 });
 
