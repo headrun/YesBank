@@ -100,7 +100,7 @@ async function rightData(page, keyword){
       var more_link = "//span[contains(text(),'MORE')]/.."
       var more_link_Arr = await page.$x(more_link);
       var href_link = await page.evaluate((...more_link)=> {return more_link.map(e => e.href);},...more_link_Arr)
-      const browser = await puppeteer.launch({ignoreHTTPSErrors: true, headless: true,args: ['--no-sandbox', '--disable-setuid-sandbox','--lang=en-GB', '--proxy-server=http://zproxy.lum-superproxy.io:22225']});
+      const browser = await puppeteer.launch({ignoreHTTPSErrors: true, headless: true,args: ['--no-sandbox', '--disable-setuid-sandbox','--lang=en-GB','--proxy-server=http://zproxy.lum-superproxy.io:22225']});
       const sub_Page = await browser.newPage();
       await sub_Page.authenticate({
                         username: 'lum-customer-headrunmain-zone-static-country-in',
@@ -290,6 +290,7 @@ connection.connect((err) => {
 app.all('/v1/api/search',  async function(req, res){
   let right_side_data_json = {};
   let right_side_data = {};
+  let fin_result_json = [];
     var keyword = req.body.keyword || req.query.keyword;
     if (!keyword || keyword ===""){
         res.status(400).send("no input provided")}
@@ -299,7 +300,7 @@ app.all('/v1/api/search',  async function(req, res){
     yield_json = {}
     const response=await run_duplicate(keyword,yield_json,'0');
     res.send(response);
-    let fin_result_json = JSON.parse(response)['original_search_data']
+    fin_result_json = JSON.parse(response)['original_search_data']
     if (fin_result_json.length > 1 && fin_result_json[fin_result_json.length - 1]['right_side_data'])
       right_side_data_json =  fin_result_json[fin_result_json.length - 1]['right_side_data']        
       right_side_data = new Object({
