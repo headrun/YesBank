@@ -164,17 +164,18 @@ async function rightData(page, keyword){
     var logo_xpath = await page.$x("//g-img[@class='ivg-i PZPZlf']/img[@class='rISBZc M4dUYb']");
     try{
         logo_url = await page.evaluate((...logo_xpath) => {return logo_xpath.map(e => e.src);}, ...logo_xpath);
-        var viewSource = await page.goto(logo_url[0],{waitUntil: 'networkidle2'});
-        fs.writeFile("./images/"+keyword, await viewSource.buffer(), function(err) {
-            if(err) {
-                    return console.log(err);
-            }
-        console.log("The file was saved!");
-        logo='yes';
-        });}
+        // var viewSource = await page.goto(logo_url[0],{waitUntil: 'networkidle2'});
+        // fs.writeFile("./images/"+keyword, await viewSource.buffer(), function(err) {
+        //     if(err) {
+        //             return console.log(err);
+        //     }
+        // console.log("The file was saved!");        
+        // logo='yes';
+        // });}
+      }
     catch(e){
-        logo='none'}
-    return [title_txt,type,desc,url,labels,data, Subs_titles_arr, logo]
+        logo_url='none'}
+    return [title_txt,type,desc,url,labels,data, Subs_titles_arr, logo_url]
 }
 
 
@@ -182,7 +183,7 @@ async function run_duplicate(keyword,yield_json,is_meanKeyword) {
         var puppeteer = require('puppeteer-extra');
         const StealthPlugin = require('puppeteer-extra-plugin-stealth');
         puppeteer.use(StealthPlugin());
-        const browser = await puppeteer.launch({ignoreHTTPSErrors: true, headless: true,args: ['--no-sandbox', '--disable-setuid-sandbox','--lang=en-GB','--proxy-server=http://zproxy.lum-superproxy.io:22225']});
+        const browser = await puppeteer.launch({ignoreHTTPSErrors: true, headless: true,args: ['--no-sandbox', '--disable-setuid-sandbox','--lang=en-GB', '--proxy-server=http://zproxy.lum-superproxy.io:22225']});
         try{
                const page = await browser.newPage();
                await page.authenticate({
@@ -220,7 +221,9 @@ async function run_duplicate(keyword,yield_json,is_meanKeyword) {
                               right_side_data[labels[i]]=values[i]
                         };
                         if(aux_data[7]!='none'){
-                            right_side_data['logo_url']="http://gson.head.run/image/"+keyword}
+                            // right_side_data['logo_url']="http://gson.head.run/image/"+keyword}
+                            right_side_data['logo_url'] = logo_url
+                          }
                         else{
                             right_side_data['logo_url']=''}
 
