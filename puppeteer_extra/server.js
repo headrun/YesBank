@@ -100,11 +100,11 @@ async function rightData(page, keyword){
       var more_link = "//span[contains(text(),'MORE')]/.."
       var more_link_Arr = await page.$x(more_link);
       var href_link = await page.evaluate((...more_link)=> {return more_link.map(e => e.href);},...more_link_Arr)
-      const browser = await puppeteer.launch({ignoreHTTPSErrors: true, headless: true,args: ['--no-sandbox', '--disable-setuid-sandbox','--lang=en-GB','--proxy-server=http://zproxy.lum-superproxy.io:22225']});
+      const browser = await puppeteer.launch({ignoreHTTPSErrors: true, headless: true,args: ['--no-sandbox', '--disable-setuid-sandbox','--lang=en-GB','--lang=en-GB','--proxy-server=in.secureconnect.me:6060']});
       const sub_Page = await browser.newPage();
       await sub_Page.authenticate({
-                        username: 'lum-customer-headrunmain-zone-static-country-in',
-                        password: 'v4iey84gn7b7'
+                        username: 'hr@headrun.com',
+                        password: 'hdrn^123!'
                });
       await sub_Page.goto(href_link[0],{waitUntil: 'networkidle2'});
       var Subsidiaries_title_path = "//div[@class='EDblX DAVP1']/a[@aria-label]"; 
@@ -183,12 +183,12 @@ async function run_duplicate(keyword,yield_json,is_meanKeyword) {
         var puppeteer = require('puppeteer-extra');
         const StealthPlugin = require('puppeteer-extra-plugin-stealth');
         puppeteer.use(StealthPlugin());
-        const browser = await puppeteer.launch({ignoreHTTPSErrors: true, headless: true,args: ['--no-sandbox', '--disable-setuid-sandbox','--lang=en-GB', '--proxy-server=http://zproxy.lum-superproxy.io:22225']});
+        const browser = await puppeteer.launch({ignoreHTTPSErrors: true, headless: true,args: ['--no-sandbox', '--disable-setuid-sandbox','--lang=en-GB', '--proxy-server=in.secureconnect.me:6060']});
         try{
                const page = await browser.newPage();
                await page.authenticate({
-                        username: 'lum-customer-headrunmain-zone-static-country-in',
-                        password: 'v4iey84gn7b7'
+                        username: 'hr@headrun.com',
+                        password: 'hdrn^123!'
                });
                await page.goto("https://www.google.co.in/search?q="+keyword,{waitUntil: 'networkidle2'});
                let data = await pageData(page);
