@@ -100,7 +100,7 @@ async function rightData(page, keyword){
       var more_link = "//span[contains(text(),'MORE')]/.."
       var more_link_Arr = await page.$x(more_link);
       var href_link = await page.evaluate((...more_link)=> {return more_link.map(e => e.href);},...more_link_Arr)
-      const browser = await puppeteer.launch({ignoreHTTPSErrors: true, headless: true,args: ['--no-sandbox', '--disable-setuid-sandbox','--lang=en-GB','--lang=en-GB','--proxy-server=in.secureconnect.me:6060']});
+      const browser = await puppeteer.launch({ignoreHTTPSErrors: true, headless: true,args: ['--no-sandbox', '--disable-setuid-sandbox','--lang=en-GB','--lang=en-GB', '--proxy-server=in.secureconnect.me:6060']});
       const sub_Page = await browser.newPage();
       await sub_Page.authenticate({
                         username: 'hr@headrun.com',
@@ -316,7 +316,7 @@ app.all('/v1/api/search',  async function(req, res){
         headquarters : right_side_data_json['Headquarters']? right_side_data_json['Headquarters'] : '',
         founded : right_side_data_json['Founded']? right_side_data_json['Founded'] : '', 
         founder: right_side_data_json['Founder']? right_side_data_json['Founder'] : '', 
-        logo_url: right_side_data_json['logo_url']? right_side_data_json['logo_url'] : '', 
+        logo_url: right_side_data_json['logo_url']? right_side_data_json['logo_url'].toString() : '', 
         customer_service: right_side_data_json['Customer service']? right_side_data_json['Customer service'] : '', 
         parent_organization: right_side_data_json['Parent organization']? right_side_data_json['Parent organization'] : '',
         number_of_employees: right_side_data_json['Number of employees']? right_side_data_json['Number of employees'] : '',
