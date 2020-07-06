@@ -28,7 +28,6 @@ class StoreImg():
         self.cur.execute(query)
         data = self.cur.fetchall()
         for dat in data:
-            import pdb;pdb.set_trace()
             keyword, logo_url = dat
             file_type, logo = logo_url.split(',')
             img_ext = re.findall('/(.*);', file_type)[0]

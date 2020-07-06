@@ -87,7 +87,7 @@ async function rightData(page, keyword){
     var sidetype1 = await page.$x("//div[@class='SPZz6b']/div[@data-attrid='subtitle']/span");
     var sidetype2 = await page.$x("//span[@class='YhemCb']");
 
-    var side_description1 = await page.$x("//h2[@class='bNg8Rb']/following-sibling::span/text()")
+    var side_description1 = await page.$x("//h2[@class='Uo8X3b']/following-sibling::span/text()")
     var side_description2 = await page.$x("//span[@class='ILfuVd UiGGAb']/span[@class='e24Kjd']/text()")
     var side_description3 = await page.$x("//span[@class='ILfuVd rjOVwe']")
 
@@ -222,7 +222,7 @@ async function run_duplicate(keyword,yield_json,is_meanKeyword) {
                         };
                         if(aux_data[7]!='none'){
                             // right_side_data['logo_url']="http://gson.head.run/image/"+keyword}
-                            right_side_data['logo_url'] = logo_url
+                            right_side_data['logo_url'] = logo_url.toString()
                           }
                         else{
                             right_side_data['logo_url']=''}
