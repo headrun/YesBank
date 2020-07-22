@@ -23,8 +23,8 @@ async function getVisibleHandle(selector, page) {
 async function pageData(page) {
     var link_xpath = '//div[@class="r"]/a[@href]'
     var title_xpath = '//h3[@class="LC20lb"]/span/text()'
-    var desc_xpath = '//div[@class="s"]/div/span[@class="st"]'
-   
+    var desc_xpath = '//div[@class="s"]/div/span[@class="st"]' 
+
     await page.waitForXPath(link_xpath);
     
     var links = await page.$x(link_xpath);
@@ -82,7 +82,7 @@ async function rightData(page, keyword){
                }
                data.push(val)
             }
-    var sidetitle1 = await page.$x("//div[@class='SPZz6b']/div[@data-attrid='title']/span");
+    var sidetitle1 = await page.$x("//div[@class='SPZz6b']/h2[@data-attrid='title']/span");
     var sidetitle2 = await page.$x("//div[@class='DRolee']");
     var sidetype1 = await page.$x("//div[@class='SPZz6b']/div[@data-attrid='subtitle']/span");
     var sidetype2 = await page.$x("//span[@class='YhemCb']");
