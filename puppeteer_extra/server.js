@@ -1,3 +1,4 @@
+const fs = require('fs');
 
 async function getVisibleHandle(selector, page) {
         const elements = await page.$$(selector);
@@ -20,42 +21,59 @@ async function getVisibleHandle(selector, page) {
         return [hasVisibleElement, visibleElement];
 }
 
-async function pageData(page) {
-    var link_xpath = '//div[@class="r"]/a[@href]'
-    var title_xpath = '//h3[@class="LC20lb"]/span/text()'
-    var desc_xpath = '//div[@class="s"]/div/span[@class="st"]' 
+async function writeHtmlLogs(page, keyword, type){
+    let bodyHTML = await page.evaluate(() => document.body.innerHTML);
+    fs.writeFile("./logs/"+(keyword+type), bodyHTML, function(err) {
+        if(err) {
+           console.log(err)
+        }
+    });
+}
 
-    await page.waitForXPath(link_xpath);
+async function pageData(page, keyword) {
+    var link_xpath = '//h3[contains(@class,"LC20lb")]/parent::a'
+    var title_xpath = '//h3[contains(@class,"LC20lb")]/span/text()'
+    var desc_xpath = '//span[@class="aCOpRe"]'
+    setTimeout(function() {
+		           console.log('waiting blah blah blah extra-waiting');
+    },5000);
     
     var links = await page.$x(link_xpath);
+    if(links.length==0){
+        console.log("link xpath changed")
+        await writeHtmlLogs(page, keyword, 'link')
+    }
+    else{
+        links = await page.evaluate((...links) => {return links.map(e => e.href);}, ...links);
+    }
     var title_array = await page.$x(title_xpath);
-    var desc_array = await page.$x(desc_xpath);
-    
     var title_list = [];
+    if(title_array.length==0){
+        console.log("title xpath changed")
+        await writeHtmlLogs(page, keyword, 'title')
+    }
+    else{
+        for (var j =0; j < title_array.length; j++)
+        {
+            title_list.push(await page.evaluate(el => el.textContent,title_array[j]));
+        }
+    }
+    var desc_array = await page.$x(desc_xpath);
     var description_list = [];
-  
-    const link_urls = await page.evaluate((...links) => {return links.map(e => e.href);}, ...links);
-    for (var j =0; j < title_array.length; j++)
-    {
-            title_list.push(await page.evaluate(el => el.textContent,title_array[j]));
+    if(desc_array.length==0){
+        console.log("description xpath changed")
+        await writeHtmlLogs(pagei, keyword, 'description')
     }
-    if (title_array.length==0){
-        title_xpath = '//h3[@class="LC20lb DKV0Md"]/text()'
-        title_array = await page.$x(title_xpath);
-        for (var j =0; j < title_array.length; j++){
-            title_list.push(await page.evaluate(el => el.textContent,title_array[j]));
-        };
+    else{
+        for (var i =0; i< desc_array.length;i++)
+        {
+            description_list.push(await page.evaluate(el => el.textContent,desc_array[i]));
+        }
     }
-    for (var i =0; i< desc_array.length;i++)
-    {
-        description_list.push(await page.evaluate(el => el.textContent,desc_array[i]));
-    }
-
-    return [link_urls,title_list,description_list]
+    return [links,title_list,description_list]
 }
 
 async function rightData(page, keyword){
-    const fs = require('fs');
     var labels = new Array();
     var data = new Array();
     var Subs_titles_arr = new Array();
@@ -100,12 +118,13 @@ async function rightData(page, keyword){
       var more_link = "//span[contains(text(),'MORE')]/.."
       var more_link_Arr = await page.$x(more_link);
       var href_link = await page.evaluate((...more_link)=> {return more_link.map(e => e.href);},...more_link_Arr)
-      const browser = await puppeteer.launch({ignoreHTTPSErrors: true, headless: true,args: ['--no-sandbox', '--disable-setuid-sandbox','--lang=en-GB','--lang=en-GB', '--proxy-server=in.secureconnect.me:6060']});
+      const browser = await puppeteer.launch({ignoreHTTPSErrors: true, headless: true, executablePath: "/usr/bin/google-chrome", args: ['--no-sandbox', '--disable-setuid-sandbox','--lang=en-GB', '--proxy-server=zproxy.lum-superproxy.io:22225']});
       const sub_Page = await browser.newPage();
       await sub_Page.authenticate({
-                        username: 'hr@headrun.com',
-                        password: 'hdrn^123!'
-               });
+                                               username: 'lum-customer-headrunmain-zone-zoneserp-country-in',
+                                               password: '7n4cijpwf6t1'
+                                      });
+      await sub_Page.setUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3312.0 Safari/537.36");
       await sub_Page.goto(href_link[0],{waitUntil: 'networkidle2'});
       var Subsidiaries_title_path = "//div[@class='EDblX DAVP1']/a[@aria-label]"; 
       var Subs_titles = await sub_Page.$x(Subsidiaries_title_path);
@@ -164,14 +183,6 @@ async function rightData(page, keyword){
     var logo_xpath = await page.$x("//g-img[@class='ivg-i PZPZlf']/img[@class='rISBZc M4dUYb']");
     try{
         logo_url = await page.evaluate((...logo_xpath) => {return logo_xpath.map(e => e.src);}, ...logo_xpath);
-        // var viewSource = await page.goto(logo_url[0],{waitUntil: 'networkidle2'});
-        // fs.writeFile("./images/"+keyword, await viewSource.buffer(), function(err) {
-        //     if(err) {
-        //             return console.log(err);
-        //     }
-        // console.log("The file was saved!");        
-        // logo='yes';
-        // });}
       }
     catch(e){
         logo_url='none'}
@@ -183,31 +194,33 @@ async function run_duplicate(keyword,yield_json,is_meanKeyword) {
         var puppeteer = require('puppeteer-extra');
         const StealthPlugin = require('puppeteer-extra-plugin-stealth');
         puppeteer.use(StealthPlugin());
-        const browser = await puppeteer.launch({ignoreHTTPSErrors: true, headless: true,args: ['--no-sandbox', '--disable-setuid-sandbox','--lang=en-GB', '--proxy-server=in.secureconnect.me:6060']});
+        const browser = await puppeteer.launch({ignoreHTTPSErrors: true, headless: true, executablePath: "/usr/bin/google-chrome", args: ['--no-sandbox', '--disable-setuid-sandbox','--lang=en-GB', '--proxy-server=zproxy.lum-superproxy.io:22225']});
         try{
-               const page = await browser.newPage();
-               await page.authenticate({
-                        username: 'hr@headrun.com',
-                        password: 'hdrn^123!'
-               });
-               await page.goto("https://www.google.co.in/search?q="+keyword,{waitUntil: 'networkidle2'});
-               let data = await pageData(page);
-               try{
+                const page = await browser.newPage();
+                await page.authenticate({
+                                                username: 'lum-customer-headrunmain-zone-zoneserp-country-in',
+                                                password: '7n4cijpwf6t1'
+                                        });
+                await page.setUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3312.0 Safari/537.36");
+                var url = "http://www.google.co.in/search?q="+keyword+"&gl=in&hl=en&lr=lang_en"
+                await page.goto(url,{waitUntil: 'networkidle2'});
+                let data = await pageData(page, keyword);
+                try{
                     aux_data = await rightData(page, keyword);;
-               }
-               catch(e){
+                }
+                catch(e){
                    aux_data = 'none'
-               }
-               link_urls = data[0]
-               title_text = data[1]
-               short_desc = data[2]
-               data= new Array();
-               for(var i = 0; i<link_urls.length;i++)
-               {
-                data.push({url:link_urls[i], title:title_text[i], short_description:short_desc[i]})
-               };
-               var right_side_data ={}
-               if (aux_data!='none'){
+                }
+                link_urls = data[0]
+                title_text = data[1]
+                short_desc = data[2]
+                data= new Array();
+                for(var i = 0; i<link_urls.length;i++)
+                {
+                    data.push({url:link_urls[i], title:title_text[i], short_description:short_desc[i]})
+                };
+                var right_side_data ={}
+                if (aux_data!='none'){
                    right_side_data["title"]=aux_data[0]
                    right_side_data["type"]=aux_data[1]
                    right_side_data["description"]=aux_data[2]
@@ -267,10 +280,10 @@ var datetime = require('node-datetime');
 var bodyParser=require("body-parser");
 const port = 8080 ;
 const app = express();
+app.timeout = 10*60*1000;
 var path = require('path');
-app.use(bodyParser.json()); // support json encoded bodies
-app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
-//app.use("/image", express.static("./images"));
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.static(path.join(__dirname, 'images')));
 
 var connection = mysql.createConnection ({
@@ -293,7 +306,6 @@ connection.connect((err) => {
 app.all('/v1/api/search',  async function(req, res){
   let right_side_data_json = {};
   let right_side_data = {};
-  let fin_result_json = [];
     var keyword = req.body.keyword || req.query.keyword;
     if (!keyword || keyword ===""){
         res.status(400).send("no input provided")}
@@ -303,7 +315,7 @@ app.all('/v1/api/search',  async function(req, res){
     yield_json = {}
     const response=await run_duplicate(keyword,yield_json,'0');
     res.send(response);
-    fin_result_json = JSON.parse(response)['original_search_data']
+    var fin_result_json = JSON.parse(response)['original_search_data']
     if (fin_result_json.length > 1 && fin_result_json[fin_result_json.length - 1]['right_side_data'])
       right_side_data_json =  fin_result_json[fin_result_json.length - 1]['right_side_data']        
       right_side_data = new Object({
@@ -335,6 +347,7 @@ app.all('/v1/api/search',  async function(req, res){
             console.log('successfully inserted into db')
         }
   });
+
   }
 });
 
